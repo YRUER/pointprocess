@@ -14,7 +14,8 @@ class Pointprocess(object):
 
         self.S=S
         self.region=region
-
+        
+        #setting boundary box and removing points outside of region (if possible)
         if(region):
             self.minBox=region.bounds
             f=lambda x,y: intFunc(x,y) if self.region.contains(Point(x,y)) else -0.0001
@@ -33,6 +34,9 @@ class Pointprocess(object):
 
     def plotProcess(self):
 
+        '''plots: points of the first realization (S[0]) pointprocess,
+        region and intensity'''
+        
         fig, ax=pyplot.subplots()
         xmin=self.minBox[0]
         ymin=self.minBox[1]
@@ -70,6 +74,7 @@ class PoissonProcess(Pointprocess):
         Pointprocess.__init__(self,S,region,intFunc)
 
     def simHomogeneousPPP(self,intensity):
+        '''returns realization of homogeneous Poissonprocess with intensity intensity'''
 
         N=np.random.poisson(lam=intensity*self.region.area)
         count=0
@@ -86,12 +91,16 @@ class PoissonProcess(Pointprocess):
         return MultiPoint(accPoints)
 
     def simPPP(self,save=False):
+        '''returns realization of (in)homogeneous Poissonprocess with intensity function intFunc,
+        may be stored in S (save=True)'''
+        
 
         out=opt.brute(lambda x:-1*self.intFunc(x[0],x[1]),
                                     ranges=((self.minBox[0],self.minBox[2],0.5),
                                     (self.minBox[1],self.minBox[3],0.5)),
                                     Ns=100,
                                     full_output=True)
+        #heuristic upper bound of intensity function
         upper=-2*out[1]
         homPPP=self.simHomogeneousPPP(upper)
         thinPP=[p for p in homPPP if upper*np.random.ranf()<=self.intFunc(p.x,p.y)]
@@ -105,13 +114,14 @@ class PoissonProcess(Pointprocess):
 
 
 if __name__=='__main__':
-
-    #PP=Pointprocess(S=[MultiPoint([(0,0),(0,1),(1,1),(5,5)])],region=Polygon([(-1,-1),(2,-1),(2,2),(-1,3)]),intFunc=lambda x,y:(x-1)**2+(y-1)**2)
-    #PP.plotProcess()
+    pass
+    '''
+    PP=Pointprocess(S=[MultiPoint([(0,0),(0,1),(1,1),(5,5)])],region=Polygon([(-1,-1),(2,-1),(2,2),(-1,3)]),intFunc=lambda x,y:(x-1)**2+(y-1)**2)
+    PP.plotProcess()
     PPP=PoissonProcess(region=Polygon([(-1,-1),(2,-1),(2,2),(-1,3)]),intFunc=lambda x,y:10*(x-1)**2)
     PPP.simPPP(save=True)
     PPP.plotProcess()
-
+    '''
 
 
 
